@@ -1,0 +1,148 @@
+# Pulsar MCP 文档服务
+
+> 为 Apache Pulsar 提供 AI 可读的 MCP (Model Context Protocol) 文档服务，支持 LLM 高效获取 Pulsar 相关知识。
+
+## 服务概览
+
+本服务通过 MCP 协议向 LLM 提供 Apache Pulsar 的结构化文档资源，包括核心概念、架构设计和使用指南。
+
+## MCP 端点
+
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/` | GET | 服务信息 |
+| `/llms.txt` | GET | 本说明文档 |
+| `/mcp/list-resources` | GET | 列出所有可用资源 |
+| `/mcp/read-resource?name=<资源名>` | GET | 读取指定资源内容 |
+| `/mcp/tools` | GET | 列出可用工具 |
+| `/mcp/call-tool` | POST | 调用工具 |
+
+## 可用资源
+
+- `pulsar-overview` - Pulsar 概述：介绍 Apache Pulsar 的定位和核心特性
+- `pulsar-concepts` - 核心概念：Producer、Consumer、Topic、Subscription 等关键概念
+- `pulsar-architecture` - 架构设计：分层架构、Broker、BookKeeper、ZooKeeper 组件详解
+
+## 可用工具
+
+### list-resources
+列出所有可用的文档资源，无参数。
+
+### read-resource
+读取指定文档资源的内容。
+- 参数：`name` (string, 必需) - 资源名称
+
+### search-docs
+在文档中搜索关键词。
+- 参数：
+  - `query` (string, 必需) - 搜索关键词
+  - `resource` (string, 可选) - 限定搜索的资源范围
+
+## Apache Pulsar 简介
+
+Apache Pulsar 是云原生分布式消息流平台，核心特性：
+
+- **多租户**：原生支持多租户架构，资源隔离
+- **持久化**：基于 BookKeeper 的分层存储，高可靠
+- **高性能**：支持百万级 Topic，低延迟消息传递
+- **地理复制**：内置跨数据中心复制能力
+- **统一模型**：同时支持队列和发布-订阅模式
+
+## 核心概念速查
+
+| 概念 | 说明 |
+|------|------|
+| Producer | 消息生产者，向 Topic 发布消息 |
+| Consumer | 消息消费者，订阅 Topic 接收消息 |
+| Topic | 消息逻辑通道，格式：`persistent://tenant/namespace/topic` |
+| Subscription | 订阅模式：Exclusive、Shared、Failover、Key_Shared |
+| Broker | 无状态服务层，处理消息传递和调度 |
+| BookKeeper | 分布式日志存储，负责消息持久化 |
+| Ledger | 不可变日志段，顺序追加写入 |
+| Cursor | 消费者位置追踪，支持消息回溯 |
+
+## 架构层次
+
+```
+┌─────────────────┐
+│     客户端       │  Producer / Consumer
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│  Broker 集群    │  服务层（无状态，可水平扩展）
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│ BookKeeper 集群 │  持久化层（分布式日志存储）
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│   ZooKeeper     │  协调服务（元数据、服务发现）
+└─────────────────┘
+```
+
+## 使用示例
+
+### 获取资源列表
+
+```
+GET /mcp/list-resources
+
+Response:
+{
+  "resources": [
+    {"uri": "resource://pulsar-overview", "name": "pulsar-overview", ...},
+    {"uri": "resource://pulsar-concepts", "name": "pulsar-concepts", ...},
+    {"uri": "resource://pulsar-architecture", "name": "pulsar-architecture", ...}
+  ],
+  "protocol": "mcp/1.0"
+}
+```
+
+### 读取资源内容
+
+```
+GET /mcp/read-resource?name=pulsar-concepts
+
+Response:
+{
+  "uri": "resource://pulsar-concepts",
+  "mimeType": "text/markdown",
+  "text": "...文档内容..."
+}
+```
+
+### 搜索文档
+
+```
+POST /mcp/call-tool
+Content-Type: application/json
+
+{
+  "name": "search-docs",
+  "arguments": {"query": "subscription"}
+}
+```
+
+## 推荐阅读顺序
+
+1. `pulsar-overview` - 了解 Pulsar 是什么，解决什么问题
+2. `pulsar-concepts` - 理解核心概念和术语
+3. `pulsar-architecture` - 深入架构设计和实现原理
+
+## 外部链接
+
+- [Apache Pulsar 官网](https://pulsar.apache.org/)
+- [Pulsar 官方文档](https://pulsar.apache.org/docs/)
+- [Pulsar GitHub](https://github.com/apache/pulsar)
+- [MCP 协议规范](https://modelcontextprotocol.io/)
+
+## 许可证
+
+Apache License 2.0
+
+## 版本
+
+- 服务版本：1.0.0
+- 协议版本：MCP 1.0
+- 最后更新：2025-03
